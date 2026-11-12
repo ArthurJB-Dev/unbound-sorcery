@@ -67,17 +67,28 @@ export function getLineageLevel(state: GameState, upgradeId: string): number {
  */
 export function calculateMPS(state: GameState): number {
   const rankDef = getCurrentRank(state.economy.historicalMana);
-  let baseMps = 1 * rankDef.mpsMultiplier;
+  const hasClass = rankDef.id >= 3;
 
-  // Bruxo base MPS is 0
-  if (state.player.classId === 'bruxo') {
+  let baseMps = Math.pow(rankDef.id, 2) * rankDef.mpsMultiplier;
+
+  // Bruxo base MPS is 0 (applies only after Classes unlock at Rank 3)
+  if (hasClass && state.player.classId === 'bruxo') {
     baseMps = 0;
   }
 
-  // Mastery Line (Mente) bonus (+5% per lvl)
+  // Mastery Line (Mente): +8% linear + 10% compounding per level
   const menteLvl = state.skills.levels.mente || 0;
-  const menteMpsBonus = 1 + menteLvl * 0.05;
+  const menteMpsBonus = (1 + menteLvl * 0.08) * Math.pow(1.1, menteLvl);
   baseMps *= menteMpsBonus;
+
+  // Mastery Line (Caos): +5% global arcane resonance per level
+  const caosLvl = state.skills.levels.caos || 0;
+  baseMps *= 1 + caosLvl * 0.05;
+
+  // Rank 7 perk: 2x production speed without aging cost
+  if (rankDef.id >= 7) {
+    baseMps *= 2.0;
+  }
 
   // Lineage bonus (Catalisação Cósmica: +25% per level)
   const cosmicLevel = getLineageLevel(state, 'catalisacao_cosmica');
@@ -88,8 +99,8 @@ export function calculateMPS(state: GameState): number {
   const { mpsMult, moon } = getCelestialMultipliers(state.player.ageDays);
   baseMps *= mpsMult;
 
-  // Class Mago Passive: Lua Cheia 4x, Lua Nova -30%
-  if (state.player.classId === 'mago') {
+  // Class Mago Passive (Rank 3+): Lua Cheia 4x, Lua Nova -30%
+  if (hasClass && state.player.classId === 'mago') {
     if (moon === 'Cheia') {
       baseMps *= 4.0;
     } else if (moon === 'Nova') {
@@ -97,16 +108,16 @@ export function calculateMPS(state: GameState): number {
     }
   }
 
-  // Class Xamã Passive: MPS * (1 + averageZoneVitality * 0.5)
-  if (state.player.classId === 'xama') {
+  // Class Xamã Passive (Rank 3+): MPS * (1 + averageZoneVitality * 0.5)
+  if (hasClass && state.player.classId === 'xama') {
     const vitValues = Object.values(state.exploration.zoneVitality);
     const avgVit = vitValues.length > 0 ? vitValues.reduce((a, b) => a + b, 0) / vitValues.length : 100;
     baseMps *= 1 + (avgVit / 100) * 0.5;
   }
 
-  // Active Buffs
+  // Active Buff: Sigilo de Automação (2x MPS resonance + 5 auto-clicks/sec)
   if (state.alchemy.activeBuffs['sigilo_automacao'] && state.alchemy.activeBuffs['sigilo_automacao'] > 0) {
-    baseMps += calculateClickPower(state) * 5; // 5 auto-clicks per second
+    baseMps = baseMps * 2.0 + calculateClickPower(state) * 5;
   }
 
   // Divine Apotheosis (NG+)
@@ -122,10 +133,20 @@ export function calculateMPS(state: GameState): number {
  */
 export function calculateClickPower(state: GameState): number {
   const rankDef = getCurrentRank(state.economy.historicalMana);
-  let power = 1 * Math.pow(rankDef.id, 1.5);
+  const hasClass = rankDef.id >= 3;
 
-  // Feiticeiro Passive: +100% mana per click
-  if (state.player.classId === 'feiticeiro') {
+  let power = 1 * Math.pow(rankDef.id, 2.2);
+
+  // Mastery Line (Corpo): +12% linear + 8% compounding click power per level
+  const corpoLvl = state.skills.levels.corpo || 0;
+  power *= (1 + corpoLvl * 0.12) * Math.pow(1.08, corpoLvl);
+
+  // Mastery Line (Caos): +5% click resonance per level
+  const caosLvl = state.skills.levels.caos || 0;
+  power *= 1 + caosLvl * 0.05;
+
+  // Feiticeiro Passive (Rank 3+): +100% mana per click
+  if (hasClass && state.player.classId === 'feiticeiro') {
     power *= 2.0;
   }
 
@@ -137,7 +158,7 @@ export function calculateClickPower(state: GameState): number {
   const { clickMult, moon } = getCelestialMultipliers(state.player.ageDays);
   power *= clickMult;
 
-  if (state.player.classId === 'mago' && moon === 'Cheia') {
+  if (hasClass && state.player.classId === 'mago' && moon === 'Cheia') {
     power *= 4.0;
   }
 
@@ -161,7 +182,7 @@ export function calculateClickPower(state: GameState): number {
   }
 
   // Feiticeiro R3 Spec A: +1% damage/power per 1% fatigue
-  if (state.player.classId === 'feiticeiro' && state.player.specs.rank3 === 'A') {
+  if (hasClass && state.player.classId === 'feiticeiro' && state.player.specs.rank3 === 'A') {
     power *= 1 + state.player.fatigue * 0.01;
   }
 
@@ -173,10 +194,12 @@ export function calculateClickPower(state: GameState): number {
  */
 export function calculateFatigueCost(state: GameState): number {
   const rankDef = getCurrentRank(state.economy.historicalMana);
+  const hasClass = rankDef.id >= 3;
+
   let cost = rankDef.fatiguePerClick;
 
-  // Feiticeiro passive: 2x fatigue
-  if (state.player.classId === 'feiticeiro') {
+  // Feiticeiro passive (Rank 3+): 2x fatigue
+  if (hasClass && state.player.classId === 'feiticeiro') {
     cost *= 2.0;
   }
 

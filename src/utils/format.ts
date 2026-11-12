@@ -1,58 +1,87 @@
 /**
- * Formatador numérico exponencial (até 1e100) e conversor de Idade (Anos/Dias).
+ * Formatador numérico exponencial (até 1e100+) e conversor de Idade (Anos/Dias).
  * Usa number nativo do JavaScript (suporta até 1.79e308).
  */
 
-const SUFFIXES: { max: number; suffix: string }[] = [
-  { max: 1e3, suffix: '' },
-  { max: 1e6, suffix: 'K' },
-  { max: 1e9, suffix: 'M' },
-  { max: 1e12, suffix: 'B' },
-  { max: 1e15, suffix: 'T' },
-  { max: 1e18, suffix: 'Qa' },
-  { max: 1e21, suffix: 'Qt' },
-  { max: 1e24, suffix: 'Sx' },
-  { max: 1e27, suffix: 'Sp' },
-  { max: 1e30, suffix: 'Oc' },
-  { max: 1e33, suffix: 'Dc' },
-  { max: 1e36, suffix: 'Tg' },
-  { max: 1e39, suffix: 'Qdg' },
-  { max: 1e42, suffix: 'Qq' },
-  { max: 1e45, suffix: 'Ss' },
-  { max: 1e48, suffix: 'Se' },
-  { max: 1e51, suffix: 'De' },
-  { max: 1e54, suffix: 'Do' },
-  { max: 1e57, suffix: 'Tr' },
-  { max: 1e60, suffix: 'QaT' },
-  { max: 1e63, suffix: 'QtT' },
-  { max: 1e66, suffix: 'SxT' },
-  { max: 1e69, suffix: 'SpT' },
-  { max: 1e72, suffix: 'OcT' },
-  { max: 1e75, suffix: 'DcT' },
-  { max: 1e78, suffix: 'TgT' },
-  { max: 1e81, suffix: 'QdgT' },
-  { max: 1e84, suffix: 'QqT' },
-  { max: 1e87, suffix: 'SsT' },
-  { max: 1e90, suffix: 'SeT' },
-  { max: 1e93, suffix: 'DeT' },
-  { max: 1e96, suffix: 'DoT' },
-  { max: 1e99, suffix: 'TrT' },
-  { max: 1e102, suffix: 'QaTT' },
+const SUFFIXES: { value: number; suffix: string }[] = [
+  { value: 1e3, suffix: 'K' },     // Mil
+  { value: 1e6, suffix: 'M' },     // Milhão
+  { value: 1e9, suffix: 'B' },     // Bilhão
+  { value: 1e12, suffix: 'T' },    // Trilhão
+  { value: 1e15, suffix: 'Qa' },   // Quadrilhão
+  { value: 1e18, suffix: 'Qt' },   // Quintilhão
+  { value: 1e21, suffix: 'Sx' },   // Sextilhão
+  { value: 1e24, suffix: 'Sp' },   // Septilhão
+  { value: 1e27, suffix: 'Oc' },   // Octilhão
+  { value: 1e30, suffix: 'No' },   // Nonilhão
+  { value: 1e33, suffix: 'Dc' },   // Decilhão
+  { value: 1e36, suffix: 'Ud' },   // Undecilhão
+  { value: 1e39, suffix: 'Dd' },   // Duodecilhão
+  { value: 1e42, suffix: 'Td' },   // Tredecilhão
+  { value: 1e45, suffix: 'Qad' },  // Quattuordecilhão
+  { value: 1e48, suffix: 'Qtd' },  // Quindecilhão
+  { value: 1e51, suffix: 'Sxd' },  // Sexdecilhão
+  { value: 1e54, suffix: 'Spd' },  // Septendecilhão
+  { value: 1e57, suffix: 'Ocd' },  // Octodecilhão
+  { value: 1e60, suffix: 'Nod' },  // Novemdecilhão
+  { value: 1e63, suffix: 'Vg' },   // Vigintilhão
+  { value: 1e66, suffix: 'Uvg' },  // Unvigintilhão
+  { value: 1e69, suffix: 'Dvg' },  // Duovigintilhão
+  { value: 1e72, suffix: 'Tvg' },  // Trevigintilhão
+  { value: 1e75, suffix: 'Qavg' }, // Quattuorvigintilhão
+  { value: 1e78, suffix: 'Qtvg' }, // Quinvigintilhão
+  { value: 1e81, suffix: 'Sxvg' }, // Sexvigintilhão
+  { value: 1e84, suffix: 'Spvg' }, // Septenvigintilhão
+  { value: 1e87, suffix: 'Ocvg' }, // Octovigintilhão
+  { value: 1e90, suffix: 'Novg' }, // Novemvigintilhão
+  { value: 1e93, suffix: 'Tg' },   // Trigintilhão
+  { value: 1e96, suffix: 'Utg' },  // Untrigintilhão
+  { value: 1e99, suffix: 'Dtg' },  // Duotrigintilhão
+  { value: 1e102, suffix: 'Ttg' }, // Tretrigintilhão
 ];
 
-/** Formata um número para exibição curta com sufixos K, M, B, T... até 1e100. */
+/** Formata um número para exibição curta com sufixos K, M, B, T... até 1e102. */
 export function formatNumber(value: number): string {
   if (!isFinite(value)) return '∞';
   if (value < 0) return '-' + formatNumber(-value);
-  if (value < 10_000) return Math.floor(value).toLocaleString('pt-BR');
-  let chosen = SUFFIXES[0];
-  for (let i = 1; i < SUFFIXES.length; i++) {
-    if (value >= SUFFIXES[i].max) chosen = SUFFIXES[i];
-    else break;
+
+  if (value < 10_000) {
+    if (value > 0 && value < 100 && !Number.isInteger(value)) {
+      return value.toLocaleString('pt-BR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      });
+    }
+    return Math.floor(value).toLocaleString('pt-BR');
   }
-  const scaled = value / chosen.max;
-  const formatted = scaled < 10 ? scaled.toFixed(2) : scaled.toFixed(1);
-  return formatted + chosen.suffix;
+
+  if (value >= 1e105) {
+    return formatScientific(value);
+  }
+
+  let index = 0;
+  for (let i = 1; i < SUFFIXES.length; i++) {
+    if (value >= SUFFIXES[i].value) {
+      index = i;
+    } else {
+      break;
+    }
+  }
+
+  let scaled = value / SUFFIXES[index].value;
+  if (scaled >= 999.95 && index + 1 < SUFFIXES.length) {
+    index += 1;
+    scaled = value / SUFFIXES[index].value;
+  }
+
+  const formatted =
+    scaled < 10
+      ? scaled.toFixed(2)
+      : scaled < 100
+      ? scaled.toFixed(1)
+      : scaled.toFixed(0);
+
+  return formatted + SUFFIXES[index].suffix;
 }
 
 /** Formata como notação científica curta, ex: 1.23e+45 */

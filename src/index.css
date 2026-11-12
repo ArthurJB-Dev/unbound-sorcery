@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 :root {
   color-scheme: dark;
@@ -17,47 +17,75 @@ body {
     #05060a;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
-::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.65); }
+::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.65); }
 
-/* Utility: number glow text */
 .text-glow {
   text-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
 }
 
-/* Progress bar shimmer */
 .shimmer {
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
 }
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-/* Button base */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-display font-semibold tracking-wide transition-all duration-200;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: "Cinzel", serif;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 200ms;
 }
+
 .btn-primary {
-  @apply bg-arcana-600 hover:bg-arcana-500 text-white shadow-glow hover:shadow-glowLg;
+  background-color: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.5);
 }
+
+.btn-primary:hover {
+  background-color: #6366f1;
+  box-shadow: 0 0 60px -10px rgba(99, 102, 241, 0.6);
+}
+
 .btn-ghost {
-  @apply bg-void-700/60 hover:bg-void-600 text-slate-200 border border-void-600;
+  background-color: rgba(17, 22, 38, 0.6);
+  color: #e2e8f0;
+  border: 1px solid #1a2138;
 }
+
+.btn-ghost:hover {
+  background-color: #1a2138;
+}
+
 .btn-disabled {
-  @apply opacity-50 cursor-not-allowed pointer-events-none;
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
-/* Card */
 .card {
-  @apply rounded-xl bg-void-800/70 border border-void-600/60 backdrop-blur-sm shadow-lg;
+  border-radius: 0.75rem;
+  background-color: rgba(10, 13, 24, 0.7);
+  border: 1px solid rgba(26, 33, 56, 0.6);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 }
 
-/* Tab pill */
 .tab-active {
-  @apply bg-arcana-600 text-white shadow-glow;
+  background-color: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.5);
 }
